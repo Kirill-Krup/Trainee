@@ -1,4 +1,3 @@
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -16,7 +15,6 @@ public class Fraction extends Thread{
         for(int i=0; i < 100; i++){
             List<Parts> newParts;
             try {
-                System.out.println("Братишка, забираю запчасти: " + this.name);
                 newParts = factory.takeParts(5);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);

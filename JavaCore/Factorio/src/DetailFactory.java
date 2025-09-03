@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -13,10 +12,8 @@ public class DetailFactory extends Thread {
     public void run(){
         for(int i = 0; i < 100; i++){
             synchronized(lock) {
-                System.out.println("Делаем запчасти " + i + " повтор");
                 doParts();
                 isDay = false;
-                System.out.println("Наступила ночь");
                 lock.notifyAll();
 
                 while (!allParts.isEmpty()) {
@@ -26,8 +23,6 @@ public class DetailFactory extends Thread {
                         throw new RuntimeException(e);
                     }
                 }
-
-                System.out.println("Наступил день");
                 isDay = true;
             }
         }
@@ -48,7 +43,6 @@ public class DetailFactory extends Thread {
     public List<Parts> takeParts(int value) throws InterruptedException {
         synchronized(lock) {
             while (isDay || allParts.isEmpty()) {
-                System.out.println("Броооо, жду, чтобы забрать запчасти");
                 lock.wait();
             }
 
