@@ -1,60 +1,81 @@
 package com.actisys;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 public class Customer {
-    private String customerId;
-    private String name;
-    private String email;
-    private LocalDateTime registeredAt;
-    private int age;
-    private String city;
 
-    public String getCustomerId() {
-        return customerId;
-    }
+  private String customerId;
+  private String name;
+  private String email;
+  private LocalDateTime registeredAt;
+  private int age;
+  private String city;
 
-    public void setCustomerId(String customerId) {
-        this.customerId = customerId;
-    }
+  public String getCustomerId() {
+    return customerId;
+  }
 
-    public String getName() {
-        return name;
-    }
+  public void setCustomerId(String customerId) {
+    this.customerId = customerId;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public String getEmail() {
-        return email;
-    }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+  public String getEmail() {
+    return email;
+  }
 
-    public LocalDateTime getRegisteredAt() {
-        return registeredAt;
-    }
+  public void setEmail(String email) {
+    this.email = email;
+  }
 
-    public void setRegisteredAt(LocalDateTime registeredAt) {
-        this.registeredAt = registeredAt;
-    }
+  public LocalDateTime getRegisteredAt() {
+    return registeredAt;
+  }
 
-    public int getAge() {
-        return age;
-    }
+  public void setRegisteredAt(LocalDateTime registeredAt) {
+    this.registeredAt = registeredAt;
+  }
 
-    public void setAge(int age) {
-        this.age = age;
-    }
+  public int getAge() {
+    return age;
+  }
 
-    public String getCity() {
-        return city;
-    }
+  public void setAge(int age) {
+    this.age = age;
+  }
 
-    public void setCity(String city) {
-        this.city = city;
+  public String getCity() {
+    return city;
+  }
+
+  public void setCity(String city) {
+    this.city = city;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(customerId, email);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    Customer customer = (Customer) obj;
+    return Objects.equals(customerId, customer.getCustomerId()) && Objects.equals(email,
+        customer.getEmail());
+  }
 }
+

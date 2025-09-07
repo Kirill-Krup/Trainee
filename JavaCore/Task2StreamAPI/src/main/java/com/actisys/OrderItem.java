@@ -1,40 +1,44 @@
 package com.actisys;
 
+import com.actisys.EnumClasses.Category;
+
 public class OrderItem {
-    private String productName;
-    private int quantity;
-    private double price;
-    private Category category;
 
-    public String getProductName() {
-        return productName;
-    }
+  private String productName;
+  private int quantity;
+  private double price;
+  private Category category;
 
-    public void setProductName(String productName) {
-        this.productName = productName;
-    }
+  public String getProductName() {
+    return productName;
+  }
 
-    public int getQuantity() {
-        return quantity;
-    }
+  public void setProductName(String productName) {
+    this.productName = productName;
+  }
 
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }
+  public int getQuantity() {
+    return quantity;
+  }
 
-    public double getPrice() {
-        return price;
-    }
+  public void setQuantity(int quantity) {
+    this.quantity = quantity;
+  }
 
-    public void setPrice(double price) {
-        this.price = price;
-    }
+  public double getPrice() {
+    return price;
+  }
 
-    public Category getCategory() {
-        return category;
-    }
+  public void setPrice(double price) {
+    this.price = price;
+  }
 
-    public void setCategory(Category category) {
-        this.category = category;
-    }
+  public Category getCategory() {
+    return category;
+  }
+
+  public void setCategory(Category category) {
+    this.category = category;
+  }
+
 }
