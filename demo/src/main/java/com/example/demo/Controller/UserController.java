@@ -2,8 +2,10 @@ package com.example.demo.Controller;
 
 import com.example.demo.DTO.UserDTO;
 import com.example.demo.Mapper.UserMapper;
+import com.example.demo.Model.User;
 import com.example.demo.Service.UserService;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -37,6 +40,11 @@ public class UserController {
   @GetMapping("/email/{email}")
   public ResponseEntity<UserDTO> getUserByEmail(@PathVariable String email) {
     return ResponseEntity.ok(userService.getUserByEmail(email));
+  }
+
+  @GetMapping("/ids")
+  public ResponseEntity<List<UserDTO>> getUsersByIds(@RequestParam List<Long> ids) {
+    return ResponseEntity.ok(userService.getUsersByIds(ids));
   }
 
   @PutMapping("/{id}")

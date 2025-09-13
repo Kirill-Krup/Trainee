@@ -1,6 +1,7 @@
 package com.example.demo.Service;
 
 import com.example.demo.DTO.CardInfoDTO;
+import com.example.demo.Exception.CardInfoNotFoundException;
 import com.example.demo.Mapper.CardInfoMapper;
 import com.example.demo.Model.CardInfo;
 import com.example.demo.Repository.CardInfoRepository;
@@ -44,7 +45,7 @@ public class CardInfoService {
           card.setExpirationDate(updated.getExpirationDate());
           return card;
         })
-        .orElseThrow(() -> new RuntimeException("Card " + id + " not found"));
+        .orElseThrow(() -> new CardInfoNotFoundException(id));
     CardInfo savedCard = cardInfoRepository.save(cardInfo);
     return cardInfoMapper.toDTO(savedCard);
   }
@@ -52,7 +53,7 @@ public class CardInfoService {
   @Transactional
   public void deleteCard(Long id) {
     if(!cardInfoRepository.existsById(id)) {
-      throw new RuntimeException("Card " + id + " not found");
+      throw new CardInfoNotFoundException(id);
     }
     cardInfoRepository.deleteById(id);
   }

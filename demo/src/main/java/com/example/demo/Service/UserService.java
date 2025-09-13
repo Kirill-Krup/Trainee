@@ -1,6 +1,7 @@
 package com.example.demo.Service;
 
 import com.example.demo.DTO.UserDTO;
+import com.example.demo.Exception.UserNotFoundException;
 import com.example.demo.Mapper.UserMapper;
 import com.example.demo.Mapper.UserMapperImpl;
 import com.example.demo.Model.User;
@@ -9,6 +10,7 @@ import jakarta.transaction.Transactional;
 import java.beans.Transient;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -39,8 +41,9 @@ public class UserService {
     return userMapper.toDTO(user);
   }
 
-  public List<User> getUsersByIds(List<Long> ids) {
-    return userRepository.findUsersByIdIn(ids);
+  public List<UserDTO> getUsersByIds(List<Long> ids) {
+    List<User> users = userRepository.findUsersByIdIn(ids);
+    return users.stream().map(userMapper::toDTO).collect(Collectors.toList());
   }
 
   @Transactional
@@ -51,7 +54,7 @@ public class UserService {
       user.setBirthDate(updated.getBirthDate());
       user.setEmail(updated.getEmail());
       return user;
-    }).orElseThrow(() -> new RuntimeException("User" + id + "Not Found"));
+    }).orElseThrow(() -> new UserNotFoundException(id));
     User savedEntity = userRepository.save(updatedEntity);
     return userMapper.toDTO(savedEntity);
   }
@@ -59,7 +62,7 @@ public class UserService {
   @Transactional
   public void deleteUser(Long id) {
     if (!userRepository.existsById(id)) {
-      throw new RuntimeException("User" + id + "Not Found");
+      throw new UserNotFoundException(id);
     }
     userRepository.deleteById(id);
   }
