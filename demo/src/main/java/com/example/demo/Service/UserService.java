@@ -35,12 +35,15 @@ public class UserService {
 
   @Cacheable(value = "users", key = "#id")
   public Optional<UserDTO> getUserById(Long id) {
-    return userRepository.findById(id).map(userMapper::toDTO);
+    return Optional.ofNullable(userRepository.findUserById(id)).map(userMapper::toDTO);
   }
 
   @Cacheable(value = "users", key = "#email")
   public UserDTO getUserByEmail(String email) {
     User user = userRepository.findUserByEmailJPQL(email);
+    if(user == null) {
+      throw new UserNotFoundException(email);
+    }
     return userMapper.toDTO(user);
   }
 
@@ -51,7 +54,7 @@ public class UserService {
   @Transactional
   @Caching(put = {
       @CachePut(value = "users", key = "#id"),
-      @CachePut(value = "users",key = "result.email", condition = "#result != null ")
+      @CachePut(value = "users",key = "#result.email", condition = "#result != null ")
   })
   public UserDTO updateUser(Long id, UserDTO updated) {
     User updatedEntity = userRepository.findById(id).map(user -> {
@@ -66,12 +69,15 @@ public class UserService {
   }
 
   @Transactional
-  @CacheEvict(value = "users", key = "#id")
-  public void deleteUser(Long id) {
-    if (!userRepository.existsById(id)) {
-      throw new UserNotFoundException(id);
-    }
+  @Caching(evict = {
+      @CacheEvict(value = "users", key = "#id"),
+      @CacheEvict(value = "users", key = "#result.email")
+  })
+  public UserDTO deleteUser(Long id) {
+    User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+    UserDTO userDTO = userMapper.toDTO(user);
     userRepository.deleteById(id);
+    return userDTO;
   }
 
 
