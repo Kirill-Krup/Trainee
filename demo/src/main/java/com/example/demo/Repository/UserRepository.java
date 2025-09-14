@@ -11,13 +11,15 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
-  @Query("SELECT u FROM User u WHERE u.email = :email")
+  @Query("SELECT u FROM User u LEFT JOIN FETCH u.cards WHERE u.email = :email")
   User findUserByEmailJPQL(@Param("email") String email);
 
-  @Query(value = "SELECT * FROM users WHERE email = :email", nativeQuery = true)
+  @Query(value = "SELECT u.* FROM users u LEFT JOIN card_info c ON u.id = c.user_id WHERE u.email = :email", nativeQuery = true)
   User findUserByEmailNative(@Param("email") String email);
 
-  User findUserById(Long id);
+  @Query("SELECT u FROM User u LEFT JOIN FETCH u.cards WHERE u.id = :id")
+  User findUserById(@Param("id") Long id);
 
-  List<User> findUsersByIdIn(Collection<Long> ids);
+  @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.cards WHERE u.id IN :ids")
+  List<User> findUsersByIdIn(@Param("ids") List<Long> ids);
 }
