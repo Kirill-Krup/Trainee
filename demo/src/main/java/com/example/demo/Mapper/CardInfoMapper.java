@@ -9,7 +9,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Component;
 
 @Component
-@Mapper
+@Mapper(componentModel = "spring")
 public interface CardInfoMapper {
 
   CardInfoMapper INSTANCE = Mappers.getMapper(CardInfoMapper.class);

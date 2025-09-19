@@ -3,6 +3,7 @@ package com.example.demo.Service;
 import com.example.demo.DTO.UserDTO;
 import com.example.demo.Exception.UserNotFoundException;
 import com.example.demo.Mapper.UserMapper;
+import com.example.demo.Model.CardInfo;
 import com.example.demo.Model.User;
 import com.example.demo.Repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -29,6 +30,11 @@ public class UserService {
   @CachePut(value = "users", key = "#result.email")
   public UserDTO createUser(UserDTO userDTO) {
     User entity = userMapper.toEntity(userDTO);
+    if (entity.getCards() != null) {
+      for (CardInfo card : entity.getCards()) {
+        card.setUser(entity);
+      }
+    }
     User savedEntity = userRepository.save(entity);
     return userMapper.toDTO(savedEntity);
   }
