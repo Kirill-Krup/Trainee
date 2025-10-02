@@ -7,14 +7,14 @@ import lombok.Data;
 @Data
 public class CardInfoDTO {
 
-  private Long id;
+  private final Long id;
 
   @NotBlank(message = "Number is required")
-  private String number;
+  private final String number;
 
   @NotBlank(message = "Holder is required")
-  private String holder;
+  private final String holder;
 
-  private Timestamp expirationDate;
+  private final Timestamp expirationDate;
 
 }
