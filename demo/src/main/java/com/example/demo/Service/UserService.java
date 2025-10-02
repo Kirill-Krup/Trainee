@@ -39,9 +39,11 @@ public class UserService {
     return userMapper.toDTO(savedEntity);
   }
 
+
   @Cacheable(value = "users", key = "#id")
   public Optional<UserDTO> getUserById(Long id) {
     return Optional.ofNullable(userRepository.findUserById(id)).map(userMapper::toDTO);
+
   }
 
   @Cacheable(value = "users", key = "#email")
