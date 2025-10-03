@@ -1,7 +1,7 @@
-package com.example.demo.Mapper;
+package com.example.demo.mapper;
 
-import com.example.demo.DTO.UserDTO;
-import com.example.demo.Model.User;
+import com.example.demo.dto.UserDTO;
+import com.example.demo.model.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 import org.springframework.stereotype.Component;

@@ -1,4 +1,4 @@
-package com.example.demo.Configuration;
+package com.example.demo.configuration;
 
 import java.time.Duration;
 import org.springframework.cache.CacheManager;

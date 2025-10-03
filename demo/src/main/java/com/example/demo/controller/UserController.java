@@ -1,9 +1,7 @@
-package com.example.demo.Controller;
+package com.example.demo.controller;
 
-import com.example.demo.DTO.UserDTO;
-import com.example.demo.Mapper.UserMapper;
-import com.example.demo.Model.User;
-import com.example.demo.Service.UserService;
+import com.example.demo.dto.UserDTO;
+import com.example.demo.service.UserService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
   private final UserService userService;
 
-  UserController(UserService userService) {
+  public UserController(UserService userService) {
     this.userService = userService;
   }
 

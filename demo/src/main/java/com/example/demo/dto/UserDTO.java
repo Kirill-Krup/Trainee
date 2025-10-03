@@ -1,12 +1,16 @@
-package com.example.demo.DTO;
+package com.example.demo.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import java.sql.Timestamp;
 import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor(force = true)
+@AllArgsConstructor
 public class UserDTO {
 
   private final Long id;

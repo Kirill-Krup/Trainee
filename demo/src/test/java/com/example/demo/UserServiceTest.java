@@ -1,11 +1,13 @@
 package com.example.demo;
 
-import com.example.demo.DTO.UserDTO;
-import com.example.demo.Exception.UserNotFoundException;
-import com.example.demo.Mapper.UserMapper;
-import com.example.demo.Model.User;
-import com.example.demo.Repository.UserRepository;
-import com.example.demo.Service.UserService;
+import com.example.demo.dto.UserDTO;
+import com.example.demo.exception.UserNotDeletedException;
+import com.example.demo.exception.UserNotFoundException;
+import com.example.demo.mapper.UserMapper;
+import com.example.demo.model.User;
+import com.example.demo.repository.UserRepository;
+import com.example.demo.service.UserService;
+import com.example.demo.service.impl.UserServiceImpl;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,7 +30,7 @@ class UserServiceTest {
   private UserMapper userMapper;
 
   @InjectMocks
-  private UserService userService;
+  private UserServiceImpl userService;
 
   private User user;
   private UserDTO userDTO;
@@ -39,9 +41,7 @@ class UserServiceTest {
     user = new User();
     user.setId(1L);
     user.setEmail("test@example.com");
-    userDTO = new UserDTO();
-    userDTO.setId(1L);
-    userDTO.setEmail("test@example.com");
+    userDTO = new UserDTO(1L, null, null, null,"test@example.com", null);
   }
 
   @Test
@@ -112,10 +112,7 @@ class UserServiceTest {
     updatedUser.setId(1L);
     updatedUser.setName("New Name");
     updatedUser.setEmail("new@example.com");
-    UserDTO updatedDTO = new UserDTO();
-    updatedDTO.setId(1L);
-    updatedDTO.setName("New Name");
-    updatedDTO.setEmail("new@example.com");
+    UserDTO updatedDTO = new UserDTO(1L, "New Name", null,null,"new@example.com",null);
     when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
     when(userRepository.save(any(User.class))).thenReturn(updatedUser);
     when(userMapper.toDTO(updatedUser)).thenReturn(updatedDTO);
@@ -130,10 +127,14 @@ class UserServiceTest {
   @Test
   @DisplayName("Delete user - Not Found")
   void testDeleteUser_NotFound() {
+    when(userRepository.existsById(99L)).thenReturn(false);
     when(userRepository.findById(99L)).thenReturn(Optional.empty());
-    assertThrows(UserNotFoundException.class, () -> userService.deleteUser(99L));
-    verify(userRepository).findById(99L);
-    verify(userRepository, never()).delete(any());
+
+    assertThrows(UserNotDeletedException.class, () -> userService.deleteUser(99L));
+
+    verify(userRepository).existsById(99L);
+    verify(userRepository, never()).findById(99L);
+    verify(userRepository, never()).deleteById(any());
   }
 
   @Test
@@ -142,9 +143,18 @@ class UserServiceTest {
     User existingUser = new User();
     existingUser.setId(1L);
     existingUser.setEmail("test@example.com");
+    UserDTO expectedDTO = new UserDTO(1L, null, null, null, "test@example.com", null);
+    when(userRepository.existsById(1L)).thenReturn(true);
     when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
-    assertDoesNotThrow(() -> userService.deleteUser(1L));
+    when(userMapper.toDTO(existingUser)).thenReturn(expectedDTO);
+    UserDTO result = userService.deleteUser(1L);
+    assertNotNull(result);
+    assertEquals(1L, result.getId());
+    assertEquals("test@example.com", result.getEmail());
+    verify(userRepository).existsById(1L);
+    verify(userRepository).findById(1L);
     verify(userRepository).deleteById(1L);
+    verify(userMapper).toDTO(existingUser);
   }
 
 
@@ -154,9 +164,7 @@ class UserServiceTest {
     User user2 = new User();
     user2.setId(2L);
     user2.setEmail("test2@example.com");
-    UserDTO userDTO2 = new UserDTO();
-    userDTO2.setId(2L);
-    userDTO2.setEmail("test2@example.com");
+    UserDTO userDTO2 = new UserDTO(2L, null, null, null,"test2@example.com",null);
     when(userRepository.findUserById(1L)).thenReturn(user);
     when(userRepository.findUserById(2L)).thenReturn(user2);
     when(userMapper.toDTO(user)).thenReturn(userDTO);

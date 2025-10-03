@@ -1,10 +1,12 @@
-package com.example.demo.Service;
+package com.example.demo.service.impl;
 
-import com.example.demo.DTO.CardInfoDTO;
-import com.example.demo.Exception.CardInfoNotFoundException;
-import com.example.demo.Mapper.CardInfoMapper;
-import com.example.demo.Model.CardInfo;
-import com.example.demo.Repository.CardInfoRepository;
+import com.example.demo.dto.CardInfoDTO;
+import com.example.demo.dto.CreateCardInfoDTO;
+import com.example.demo.exception.CardInfoNotFoundException;
+import com.example.demo.mapper.CardInfoMapper;
+import com.example.demo.model.CardInfo;
+import com.example.demo.repository.CardInfoRepository;
+import com.example.demo.service.CardInfoService;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -12,31 +14,36 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class CardInfoService {
-
+public class CardInfoServiceImpl implements CardInfoService {
   private final CardInfoRepository cardInfoRepository;
   private final CardInfoMapper cardInfoMapper;
 
-  public CardInfoService(CardInfoRepository cardInfoRepository, CardInfoMapper cardInfoMapper) {
+  public CardInfoServiceImpl(CardInfoRepository cardInfoRepository, CardInfoMapper cardInfoMapper) {
     this.cardInfoRepository = cardInfoRepository;
     this.cardInfoMapper = cardInfoMapper;
   }
 
-  public CardInfoDTO createCard(CardInfoDTO cardInfo) {
-    CardInfo entity = cardInfoMapper.toEntity(cardInfo);
+  @Override
+  public CardInfoDTO createCard(CreateCardInfoDTO createCardInfoDTO) {
+    CardInfo entity = cardInfoMapper.toEntityForCreate(createCardInfoDTO);
     CardInfo savedCard = cardInfoRepository.save(entity);
     return cardInfoMapper.toDTO(savedCard);
   }
 
+  @Override
   public Optional<CardInfoDTO> getCardInfoById(Long id) {
     return cardInfoRepository.findById(id).map(cardInfoMapper::toDTO);
   }
 
+  @Override
   public List<CardInfoDTO> getCardsByIds(List<Long> ids){
-    return cardInfoRepository.findByIdIn(ids).stream().map(cardInfoMapper::toDTO).collect(Collectors.toList());
+    return cardInfoRepository.findByIdIn(ids).stream().map(cardInfoMapper::toDTO).collect(
+        Collectors.toList());
   }
 
+
   @Transactional
+  @Override
   public CardInfoDTO updateCard(Long id, CardInfoDTO updated) {
     CardInfo cardInfo = cardInfoRepository.findById(id)
         .map(card -> {
@@ -51,6 +58,7 @@ public class CardInfoService {
   }
 
   @Transactional
+  @Override
   public void deleteCard(Long id) {
     if(!cardInfoRepository.existsById(id)) {
       throw new CardInfoNotFoundException(id);

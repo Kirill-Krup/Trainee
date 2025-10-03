@@ -1,13 +1,11 @@
-package com.example.demo.DTO;
+package com.example.demo.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import java.sql.Timestamp;
 import lombok.Data;
+import java.sql.Timestamp;
 
 @Data
-public class CardInfoDTO {
-
-  private final Long id;
+public class CreateCardInfoDTO {
 
   @NotBlank(message = "Number is required")
   private final String number;
@@ -16,5 +14,4 @@ public class CardInfoDTO {
   private final String holder;
 
   private final Timestamp expirationDate;
-
 }

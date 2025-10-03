@@ -1,11 +1,13 @@
-package com.example.demo.Model;
+package com.example.demo.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.Data;
 import java.sql.Timestamp;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "card_info")
 public class CardInfo {

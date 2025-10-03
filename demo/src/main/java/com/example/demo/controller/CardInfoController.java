@@ -1,7 +1,8 @@
-package com.example.demo.Controller;
+package com.example.demo.controller;
 
-import com.example.demo.DTO.CardInfoDTO;
-import com.example.demo.Service.CardInfoService;
+import com.example.demo.dto.CardInfoDTO;
+import com.example.demo.dto.CreateCardInfoDTO;
+import com.example.demo.service.CardInfoService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +20,8 @@ public class CardInfoController {
   }
 
   @PostMapping
-  public ResponseEntity<CardInfoDTO> createCard(@Valid @RequestBody CardInfoDTO cardInfoDTO) {
-    CardInfoDTO createdCard = cardInfoService.createCard(cardInfoDTO);
+  public ResponseEntity<CardInfoDTO> createCard(@Valid @RequestBody CreateCardInfoDTO createCardInfoDTO) {
+    CardInfoDTO createdCard = cardInfoService.createCard(createCardInfoDTO);
     return ResponseEntity.ok(createdCard);
   }
 

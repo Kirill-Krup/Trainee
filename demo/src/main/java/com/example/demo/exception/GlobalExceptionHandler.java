@@ -1,6 +1,6 @@
-package com.example.demo.Exception;
+package com.example.demo.exception;
 
-import com.example.demo.DTO.ErrorResponse;
+import com.example.demo.dto.ErrorResponse;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +39,12 @@ public class GlobalExceptionHandler {
 
     ErrorResponse error = new ErrorResponse("VALIDATION_ERROR", errorMessage);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+  }
+
+  @ExceptionHandler(UserNotDeletedException.class)
+  public ResponseEntity<ErrorResponse> handleUserNotDeletedException(UserNotDeletedException e) {
+    ErrorResponse error = new ErrorResponse("USER_NOT_DELETED", e.getMessage());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
   }
 }
 
