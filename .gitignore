@@ -1,9 +1,53 @@
-# Default ignored files
-/shelf/
-/workspace.xml
-# Editor-based HTTP Client requests
-/httpRequests/
-# Datasource local storage ignored files
-/dataSources/
-/dataSources.local.xml
-/idea
+# IDE
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Build
+target/
+build/
+out/
+bin/
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Application
+application.properties
+application.yml
+/config/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Git
+*.orig
+
+# IDE specific
+/.idea/encodings.xml
+/.idea/misc.xml
+/.idea/vcs.xml
+/.idea/workspace.xml
+/.idea/shelf/
+/.idea/httpRequests/
+/.idea/dataSources/
+/.idea/dataSources.local.xml
+
+# Module specific (если нужно игнорировать для всех модулей)
+project/**/.idea/
+project/**/target/
+project/**/.mvn/
+project/**/mvnw
+project/**/mvnw.cmd
