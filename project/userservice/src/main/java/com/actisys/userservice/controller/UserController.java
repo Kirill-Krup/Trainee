@@ -4,6 +4,7 @@ import com.actisys.userservice.dto.UserDTO;
 import com.actisys.userservice.service.UserService;
 import jakarta.validation.Valid;
 import java.util.List;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,7 +28,7 @@ public class UserController {
   @PostMapping
   public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserDTO userDTO) {
     UserDTO newUser = userService.createUser(userDTO);
-    return ResponseEntity.ok().body(newUser);
+    return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
   }
 
   @GetMapping("/{id}")
