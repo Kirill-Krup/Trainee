@@ -24,6 +24,7 @@
     <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
     <spring-cloud.version>2025.0.0</spring-cloud.version>
     <wire-mock.version>3.5.2</wire-mock.version>
+    <jacoco-version>0.8.11</jacoco-version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -157,6 +158,28 @@
         <artifactId>sonar-maven-plugin</artifactId>
         <version>${sonar-maven-plugin.version}</version>
       </plugin>
+
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco-version}</version>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
   </build>
 </project>
