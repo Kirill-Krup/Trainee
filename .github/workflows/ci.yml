@@ -4,10 +4,9 @@ on:
   push:
     branches: [ "master" ]
   pull_request:
-
+  
 env:
   JWT_SECRET: ${{ secrets.JWT_SECRET }}
-
 jobs:
   build:
     name: Build userService
@@ -58,7 +57,6 @@ jobs:
           mvn -B test
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
-
   sonar:
     name: SonarCloud Analysis
     runs-on: ubuntu-latest
@@ -106,6 +104,7 @@ jobs:
         run: |
           cd project/userservice
           mvn -B clean package -DskipTests=true
+
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
