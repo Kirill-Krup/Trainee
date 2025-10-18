@@ -15,6 +15,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -32,11 +33,17 @@ class UserServiceIntegrationTest {
       .withUsername("test")
       .withPassword("test");
 
+  @Container
+  static GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine")
+      .withExposedPorts(6379);
+
   @DynamicPropertySource
   static void configureProperties(DynamicPropertyRegistry registry) {
     registry.add("spring.datasource.url", postgres::getJdbcUrl);
     registry.add("spring.datasource.username", postgres::getUsername);
     registry.add("spring.datasource.password", postgres::getPassword);
+    registry.add("spring.data.redis.host", redis::getHost);
+    registry.add("spring.data.redis.port", redis::getFirstMappedPort);
   }
 
   @Autowired
@@ -69,7 +76,7 @@ class UserServiceIntegrationTest {
     UserDTO created = userService.createUser(testUser);
 
     assertThat(created).isNotNull();
-    assertThat(created.getId()).isNotNull(); // Проверяем что ID не null
+    assertThat(created.getId()).isNotNull();
     assertThat(created.getName()).isEqualTo("Alice");
     assertThat(created.getEmail()).isEqualTo("alice@example.com");
     assertThat(created.getCards()).hasSize(1);

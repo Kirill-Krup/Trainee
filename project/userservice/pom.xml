@@ -23,6 +23,7 @@
     <sonar-maven-plugin.version>3.10.0.2594</sonar-maven-plugin.version>
     <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
     <jjwt.version>0.11.5</jjwt.version>
+    <env-version>2.5.4</env-version>
   </properties>
 
   <dependencies>
@@ -42,6 +43,11 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-redis</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>me.paulschwarz</groupId>
+      <artifactId>spring-dotenv</artifactId>
+      <version>${env-version}</version>
     </dependency>
 
     <!-- Database -->
@@ -146,8 +152,9 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>${maven-compiler-plugin.version}</version>
+        <version>3.11.0</version>
         <configuration>
+          <parameters>true</parameters>
           <source>${java.version}</source>
           <target>${java.version}</target>
           <annotationProcessorPaths>

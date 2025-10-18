@@ -27,6 +27,7 @@ Thumbs.db
 application.properties
 application.yml
 /config/
+.env
 
 # Temporary files
 *.tmp
@@ -45,7 +46,7 @@ application.yml
 /.idea/dataSources/
 /.idea/dataSources.local.xml
 
-# Module specific (если нужно игнорировать для всех модулей)
+
 project/**/.idea/
 project/**/target/
 project/**/.mvn/
