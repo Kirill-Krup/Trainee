@@ -2,6 +2,8 @@ package com.actisys.orderservice.service.impl;
 
 import com.actisys.orderservice.dto.OrderDTO;
 import com.actisys.orderservice.exception.OrderNotFoundException;
+import com.actisys.orderservice.exception.UserNotFoundException;
+import com.actisys.orderservice.fallback.UserServiceClient;
 import com.actisys.orderservice.mapper.OrderMapper;
 import com.actisys.orderservice.model.Order;
 import com.actisys.orderservice.model.enumClasses.StatusType;
@@ -20,9 +22,15 @@ public class OrderServiceImpl implements OrderService {
 
   private final OrderRepository repository;
   private final OrderMapper mapper;
+  private final UserServiceClient userServiceClient;
 
   @Override
-  public OrderDTO createOrder(OrderDTO order) {
+  public OrderDTO createOrder(OrderDTO order, String email) {
+    Long userId = userServiceClient.getUserIdByEmail(email);
+    if(userId == null) {
+      throw new UserNotFoundException(email);
+    }
+    order.setUserId(userId);
     Order orderForSave = mapper.toEntity(order);
     Order savedEntity = repository.save(orderForSave);
     return mapper.toDTO(savedEntity);

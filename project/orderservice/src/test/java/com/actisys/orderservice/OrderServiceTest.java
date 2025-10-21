@@ -9,8 +9,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.actisys.orderservice.dto.OrderDTO;
-import com.actisys.orderservice.dto.UserDTO;
 import com.actisys.orderservice.exception.OrderNotFoundException;
+import com.actisys.orderservice.fallback.UserServiceClient;
 import com.actisys.orderservice.mapper.OrderMapper;
 import com.actisys.orderservice.model.Order;
 import com.actisys.orderservice.model.enumClasses.StatusType;
@@ -35,36 +35,63 @@ class OrderServiceTest {
   @Mock
   private OrderMapper mapper;
 
+  @Mock
+  private UserServiceClient userServiceClient;
+
   @InjectMocks
   private OrderServiceImpl orderService;
 
   @Test
-  @DisplayName("This test should create order")
+  @DisplayName("This test should create order with user ID from email")
   void createOrder() {
-    OrderDTO inputDTO = createOrderDTO(null, StatusType.PENDING);
+    String email = "user@example.com";
+    Long userId = 1L;
+    OrderDTO inputDTO = new OrderDTO(null, null, StatusType.PENDING, LocalDateTime.now(), null);
     Order orderEntity = createOrderEntity(null, StatusType.PENDING);
     Order savedOrder = createOrderEntity(1L, StatusType.PENDING);
-    OrderDTO expectedDTO = createOrderDTO(1L, StatusType.PENDING);
+    OrderDTO expectedDTO = new OrderDTO(1L, userId, StatusType.PENDING, LocalDateTime.now(), null);
 
-    when(mapper.toEntity(inputDTO)).thenReturn(orderEntity);
+    when(userServiceClient.getUserIdByEmail(email)).thenReturn(1L); // Просто строковый ID
+    when(mapper.toEntity(any(OrderDTO.class))).thenReturn(orderEntity);
     when(repository.save(orderEntity)).thenReturn(savedOrder);
     when(mapper.toDTO(savedOrder)).thenReturn(expectedDTO);
 
-    OrderDTO result = orderService.createOrder(inputDTO);
+    OrderDTO result = orderService.createOrder(inputDTO, email);
 
     assertThat(result.getId()).isEqualTo(1L);
+    assertThat(result.getUserId()).isEqualTo(userId);
     assertThat(result.getStatus()).isEqualTo(StatusType.PENDING);
-    verify(mapper).toEntity(inputDTO);
+
+    verify(userServiceClient).getUserIdByEmail(email);
+    verify(mapper).toEntity(any(OrderDTO.class));
     verify(repository).save(orderEntity);
     verify(mapper).toDTO(savedOrder);
+  }
+
+  @Test
+  @DisplayName("This test should throw exception when user not found by email")
+  void createOrder_userNotFound() {
+    String email = "nonexistent@example.com";
+    OrderDTO inputDTO = new OrderDTO(null, null, StatusType.PENDING, LocalDateTime.now(), null);
+
+    when(userServiceClient.getUserIdByEmail(email)).thenReturn(null);
+
+    assertThatThrownBy(() -> orderService.createOrder(inputDTO, email))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("User " + email + " not found");
+
+    verify(userServiceClient).getUserIdByEmail(email);
+    verify(mapper, never()).toEntity(any());
+    verify(repository, never()).save(any());
   }
 
   @Test
   @DisplayName("This test should get order by id")
   void getOrderById() {
     Long orderId = 1L;
+    Long userId = 1L;
     Order orderEntity = createOrderEntity(orderId, StatusType.CONFIRMED);
-    OrderDTO expectedDTO = createOrderDTO(orderId, StatusType.CONFIRMED);
+    OrderDTO expectedDTO = new OrderDTO(orderId, userId, StatusType.CONFIRMED, LocalDateTime.now(), null);
 
     when(repository.findById(orderId)).thenReturn(Optional.of(orderEntity));
     when(mapper.toDTO(orderEntity)).thenReturn(expectedDTO);
@@ -73,6 +100,7 @@ class OrderServiceTest {
 
     assertThat(result).isPresent();
     assertThat(result.get().getId()).isEqualTo(orderId);
+    assertThat(result.get().getUserId()).isEqualTo(userId);
     assertThat(result.get().getStatus()).isEqualTo(StatusType.CONFIRMED);
     verify(repository).findById(orderId);
     verify(mapper).toDTO(orderEntity);
@@ -89,7 +117,7 @@ class OrderServiceTest {
         .hasMessageContaining("999");
 
     verify(repository).findById(orderId);
-    verify(mapper, never()).toDTO((Order) any());
+    verify(mapper, never()).toDTO(any(Order.class));
   }
 
   @Test
@@ -98,8 +126,8 @@ class OrderServiceTest {
     List<Long> orderIds = List.of(1L, 2L);
     Order order1 = createOrderEntity(1L, StatusType.PENDING);
     Order order2 = createOrderEntity(2L, StatusType.CONFIRMED);
-    OrderDTO dto1 = createOrderDTO(1L, StatusType.PENDING);
-    OrderDTO dto2 = createOrderDTO(2L, StatusType.CONFIRMED);
+    OrderDTO dto1 = new OrderDTO(1L, 1L, StatusType.PENDING, LocalDateTime.now(), null);
+    OrderDTO dto2 = new OrderDTO(2L, 2L, StatusType.CONFIRMED, LocalDateTime.now(), null);
 
     when(repository.findByIdIn(orderIds)).thenReturn(List.of(order1, order2));
     when(mapper.toDTO(order1)).thenReturn(dto1);
@@ -117,12 +145,11 @@ class OrderServiceTest {
   @Test
   @DisplayName("This test should get orders by statuses")
   void getOrdersByStatuses() {
-
     List<StatusType> statuses = List.of(StatusType.PENDING, StatusType.CONFIRMED);
     Order order1 = createOrderEntity(1L, StatusType.PENDING);
     Order order2 = createOrderEntity(2L, StatusType.CONFIRMED);
-    OrderDTO dto1 = createOrderDTO(1L, StatusType.PENDING);
-    OrderDTO dto2 = createOrderDTO(2L, StatusType.CONFIRMED);
+    OrderDTO dto1 = new OrderDTO(1L, 1L, StatusType.PENDING, LocalDateTime.now(), null);
+    OrderDTO dto2 = new OrderDTO(2L, 2L, StatusType.CONFIRMED, LocalDateTime.now(), null);
 
     when(repository.findByStatusIn(statuses)).thenReturn(List.of(order1, order2));
     when(mapper.toDTO(order1)).thenReturn(dto1);
@@ -140,10 +167,11 @@ class OrderServiceTest {
   @DisplayName("This test should update order")
   void updateOrder() {
     Long orderId = 1L;
-    OrderDTO updateDTO = createOrderDTO(null, StatusType.SHIPPED);
+    Long userId = 1L;
+    OrderDTO updateDTO = new OrderDTO(null, userId, StatusType.SHIPPED, LocalDateTime.now(), null);
     Order existingOrder = createOrderEntity(orderId, StatusType.PENDING);
     Order updatedOrder = createOrderEntity(orderId, StatusType.SHIPPED);
-    OrderDTO expectedDTO = createOrderDTO(orderId, StatusType.SHIPPED);
+    OrderDTO expectedDTO = new OrderDTO(orderId, userId, StatusType.SHIPPED, LocalDateTime.now(), null);
 
     when(repository.findById(orderId)).thenReturn(Optional.of(existingOrder));
     when(repository.save(existingOrder)).thenReturn(updatedOrder);
@@ -152,6 +180,7 @@ class OrderServiceTest {
     OrderDTO result = orderService.updateOrder(orderId, updateDTO);
 
     assertThat(result.getId()).isEqualTo(orderId);
+    assertThat(result.getUserId()).isEqualTo(userId);
     assertThat(result.getStatus()).isEqualTo(StatusType.SHIPPED);
     verify(repository).findById(orderId);
     verify(repository).save(existingOrder);
@@ -161,9 +190,8 @@ class OrderServiceTest {
   @Test
   @DisplayName("This test should throw custom exception, because no order to update")
   void updateNotExistedOrder() {
-
     Long orderId = 999L;
-    OrderDTO updateDTO = createOrderDTO(null, StatusType.SHIPPED);
+    OrderDTO updateDTO = new OrderDTO(null, 1L, StatusType.SHIPPED, LocalDateTime.now(), null);
 
     when(repository.findById(orderId)).thenReturn(Optional.empty());
 
@@ -178,7 +206,6 @@ class OrderServiceTest {
   @Test
   @DisplayName("This test should delete order")
   void deleteOrder() {
-
     Long orderId = 1L;
     when(repository.existsById(orderId)).thenReturn(true);
 
@@ -191,7 +218,6 @@ class OrderServiceTest {
   @Test
   @DisplayName("This test should throw custom exception. because order not found")
   void deleteNotExistedOrder() {
-
     Long orderId = 999L;
     when(repository.existsById(orderId)).thenReturn(false);
 
@@ -201,12 +227,6 @@ class OrderServiceTest {
 
     verify(repository).existsById(orderId);
     verify(repository, never()).deleteById(orderId);
-  }
-
-
-  private OrderDTO createOrderDTO(Long id, StatusType status) {
-    UserDTO userDTO = new UserDTO(1L, "Kirill", "Krupenin", null, "kiryl.krupenin@innowise.com");
-    return new OrderDTO(id, userDTO, status, LocalDateTime.now());
   }
 
   private Order createOrderEntity(Long id, StatusType status) {

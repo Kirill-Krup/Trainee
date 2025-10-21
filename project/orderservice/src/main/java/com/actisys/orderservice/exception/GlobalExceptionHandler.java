@@ -27,5 +27,11 @@ public class GlobalExceptionHandler {
     ErrorResponse error = new ErrorResponse("INTERNAL_SERVER_ERROR", e.getMessage());
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
   }
+
+  @ExceptionHandler(UserNotFoundException.class)
+  public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException e) {
+    ErrorResponse error = new ErrorResponse("USER NOT FOUND", e.getMessage());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+  }
 }
 

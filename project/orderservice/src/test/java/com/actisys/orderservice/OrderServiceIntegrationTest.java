@@ -1,21 +1,17 @@
 package com.actisys.orderservice;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.actisys.orderservice.dto.OrderDTO;
-import com.actisys.orderservice.dto.UserDTO;
 import com.actisys.orderservice.exception.OrderNotFoundException;
 import com.actisys.orderservice.model.enumClasses.StatusType;
 import com.actisys.orderservice.repository.OrderRepository;
 import com.actisys.orderservice.service.OrderService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.actisys.orderservice.config.PostgresTestContainer;
 import com.github.tomakehurst.wiremock.WireMockServer;
-import java.sql.Timestamp;
+import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.AfterAll;
@@ -29,7 +25,6 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -40,20 +35,17 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 public class OrderServiceIntegrationTest {
 
   @Container
-  static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
-      .withDatabaseName("order_service_db")
-      .withUsername("test")
-      .withPassword("test");
+  static final PostgresTestContainer postgres = PostgresTestContainer.getInstance();
 
   @DynamicPropertySource
   static void configurateProperties(DynamicPropertyRegistry registry) {
     registry.add("spring.datasource.url", postgres::getJdbcUrl);
     registry.add("spring.datasource.username", postgres::getUsername);
     registry.add("spring.datasource.password", postgres::getPassword);
+    registry.add("user.service.url", () -> "http://localhost:9561");
   }
 
   private static WireMockServer wireMockServer;
-  private static final ObjectMapper mapper = new ObjectMapper();
 
   @Autowired
   private OrderService orderService;
@@ -61,112 +53,108 @@ public class OrderServiceIntegrationTest {
   @Autowired
   private OrderRepository orderRepository;
 
-  private UserDTO testUser;
+  private final String testEmail = "kiryl.krupenin@innowise.com";
+  private final Long testUserId = 1L;
 
   @BeforeAll
   static void startWireMock() {
-    wireMockServer = new WireMockServer(9561);
+    wireMockServer = new WireMockServer(
+        WireMockConfiguration.options()
+            .port(9561)
+            .notifier(new ConsoleNotifier(false))
+    );
     wireMockServer.start();
     configureFor("localhost", 9561);
   }
 
   @AfterAll
   static void stopWireMock() {
-    wireMockServer.stop();
+    if (wireMockServer != null) {
+      wireMockServer.stop();
+    }
   }
 
   @BeforeEach
-  void setup() throws Exception {
-    testUser = new UserDTO(
-        1L,
-        "Kirill",
-        "Krupenin",
-        Timestamp.valueOf("2005-12-19 06:30:27"),
-        "kiryl.krupenin@innowise.com"
-    );
+  void setup() {
+    wireMockServer.resetAll();
 
-    wireMockServer.stubFor(get(urlEqualTo("/users/1"))
+    wireMockServer.stubFor(get(urlMatching("/api/v1/users/get-id-by-email/.*"))
         .willReturn(aResponse()
+            .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(mapper.writeValueAsString(testUser))
-            .withStatus(200)));
+            .withBody("1")));
   }
 
   @Test
-  @DisplayName("This test should create order")
+  @DisplayName("Should create order successfully")
   void createOrder() {
     OrderDTO created = orderService.createOrder(
-        new OrderDTO(null, testUser, StatusType.PENDING, LocalDateTime.now())
+        new OrderDTO(null, null, StatusType.PENDING, LocalDateTime.now(), null),
+        testEmail
     );
+
+    verify(getRequestedFor(urlMatching("/api/v1/users/get-id-by-email/.*kiryl\\.krupenin.*")));
 
     assertThat(created.getId()).isNotNull();
     assertThat(orderRepository.findById(created.getId())).isPresent();
     assertThat(created.getStatus()).isEqualTo(StatusType.PENDING);
+    assertThat(created.getUserId()).isEqualTo(testUserId);
   }
 
   @Test
-  @DisplayName("This test should find order by id")
+  @DisplayName("Should find order by id")
   void shouldFindOrderById() {
     OrderDTO created = orderService.createOrder(
-        new OrderDTO(null, testUser, StatusType.CONFIRMED, LocalDateTime.now())
+        new OrderDTO(null, null, StatusType.CONFIRMED, LocalDateTime.now(), null),
+        testEmail
     );
 
     OrderDTO found = orderService.getOrderById(created.getId()).orElseThrow();
 
     assertThat(found.getId()).isEqualTo(created.getId());
     assertThat(found.getStatus()).isEqualTo(StatusType.CONFIRMED);
+    assertThat(found.getUserId()).isEqualTo(testUserId);
   }
 
   @Test
-  @DisplayName("This test should update order")
-  void updateOrder() {
-    OrderDTO created = orderService.createOrder(
-        new OrderDTO(null, testUser, StatusType.PROCESSING, LocalDateTime.now())
-    );
-
-    OrderDTO updated = orderService.updateOrder(
-        created.getId(),
-        new OrderDTO(created.getId(), testUser, StatusType.SHIPPED, created.getCreationDate())
-    );
-
-    assertThat(updated.getStatus()).isEqualTo(StatusType.SHIPPED);
-  }
-
-  @Test
-  @DisplayName("This test should delete order")
-  void deleteOrder() {
-    OrderDTO created = orderService.createOrder(
-        new OrderDTO(null, testUser, StatusType.PENDING, LocalDateTime.now())
-    );
-
-    orderService.deleteOrder(created.getId());
-    assertThat(orderRepository.findById(created.getId())).isEmpty();
-  }
-
-  @Test
-  @DisplayName("This test should 'OrderNotFoundException'")
+  @DisplayName("Should throw OrderNotFoundException when order not found")
   void orderNotFound() {
-    assertThrows(
+    org.junit.jupiter.api.Assertions.assertThrows(
         OrderNotFoundException.class,
         () -> orderService.getOrderById(999L).orElseThrow()
     );
   }
 
   @Test
-  @DisplayName("This test should find all orders by statuses")
+  @DisplayName("Should find all orders by statuses")
   void findOrdersByStatuses() {
-    orderService.createOrder(new OrderDTO(null, testUser, StatusType.SHIPPED, LocalDateTime.now()));
-    orderService.createOrder(
-        new OrderDTO(null, testUser, StatusType.DELIVERED, LocalDateTime.now()));
-    orderService.createOrder(
-        new OrderDTO(null, testUser, StatusType.CANCELLED, LocalDateTime.now()));
+    orderService.createOrder(new OrderDTO(null, null, StatusType.SHIPPED, LocalDateTime.now(), null), testEmail);
+    orderService.createOrder(new OrderDTO(null, null, StatusType.DELIVERED, LocalDateTime.now(), null), testEmail);
+    orderService.createOrder(new OrderDTO(null, null, StatusType.CANCELLED, LocalDateTime.now(), null), testEmail);
 
-    List<OrderDTO> found = orderService.getOrdersByStatusIn(
-        List.of(StatusType.SHIPPED, StatusType.DELIVERED));
+    List<OrderDTO> found = orderService.getOrdersByStatusIn(List.of(StatusType.SHIPPED, StatusType.DELIVERED));
 
     assertThat(found).hasSize(2);
-    assertThat(found)
-        .allMatch(
-            o -> o.getStatus() == StatusType.SHIPPED || o.getStatus() == StatusType.DELIVERED);
+    assertThat(found).allMatch(
+        o -> o.getStatus() == StatusType.SHIPPED || o.getStatus() == StatusType.DELIVERED);
+    assertThat(found).allMatch(o -> o.getUserId().equals(testUserId));
+  }
+
+  @Test
+  @DisplayName("Should find orders by ids")
+  void findOrdersByIds() {
+    OrderDTO order1 = orderService.createOrder(
+        new OrderDTO(null, null, StatusType.PENDING, LocalDateTime.now(), null),
+        testEmail
+    );
+    OrderDTO order2 = orderService.createOrder(
+        new OrderDTO(null, null, StatusType.CONFIRMED, LocalDateTime.now(), null),
+        testEmail
+    );
+
+    List<OrderDTO> found = orderService.getOrdersByIdIn(List.of(order1.getId(), order2.getId()));
+
+    assertThat(found).hasSize(2);
+    assertThat(found).extracting(OrderDTO::getId).containsExactlyInAnyOrder(order1.getId(), order2.getId());
   }
 }

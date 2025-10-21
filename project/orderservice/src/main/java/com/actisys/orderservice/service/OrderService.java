@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public interface OrderService {
 
-  OrderDTO createOrder(OrderDTO order);
+  OrderDTO createOrder(OrderDTO order, String email);
 
   Optional<OrderDTO> getOrderById(Long orderId);
 

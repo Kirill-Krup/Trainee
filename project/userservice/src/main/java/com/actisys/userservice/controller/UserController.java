@@ -40,6 +40,12 @@ public class UserController {
     return ResponseEntity.ok(userService.getUserByEmail(email));
   }
 
+  @GetMapping("/get-id-by-email/{email}")
+  public ResponseEntity<?> getUserIdByEmail(@PathVariable String email) {
+    Long userId = userService.getUserByEmail(email).getId();
+    return ResponseEntity.ok(userId);
+  }
+
   @GetMapping("/ids")
   public ResponseEntity<List<UserDTO>> getUsersByIds(@RequestParam List<Long> ids) {
     return ResponseEntity.ok(userService.getUsersByIds(ids));
