@@ -1,5 +1,5 @@
 FROM openjdk:21-jdk-slim
-WORKDIR /userService
-COPY target/*.jar userService.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "userService.jar"]
+WORKDIR /app
+COPY target/userservice-*.jar app.jar
+EXPOSE 8081
+ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,5 +1,5 @@
 FROM openjdk:21-jdk-slim
 WORKDIR /app
-COPY target/*auth*.jar app.jar
-EXPOSE 8082
+COPY target/*gateway*.jar app.jar
+EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
