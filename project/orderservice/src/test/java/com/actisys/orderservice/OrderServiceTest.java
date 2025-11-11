@@ -51,7 +51,7 @@ class OrderServiceTest {
     Order savedOrder = createOrderEntity(1L, StatusType.PENDING);
     OrderDTO expectedDTO = new OrderDTO(1L, userId, StatusType.PENDING, LocalDateTime.now(), null);
 
-    when(userServiceClient.getUserIdByEmail(email)).thenReturn(1L); // Просто строковый ID
+    when(userServiceClient.getUserIdByEmail(email)).thenReturn(1L);
     when(mapper.toEntity(any(OrderDTO.class))).thenReturn(orderEntity);
     when(repository.save(orderEntity)).thenReturn(savedOrder);
     when(mapper.toDTO(savedOrder)).thenReturn(expectedDTO);

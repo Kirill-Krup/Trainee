@@ -1,5 +1,5 @@
-FROM openjdk:21-jdk-slim
-WORKDIR /authService
-COPY target/*.jar authservice.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "authservice.jar"]
+FROM eclipse-temurin:21
+WORKDIR /app
+COPY target/*auth*.jar app.jar
+EXPOSE 8082
+ENTRYPOINT ["java", "-jar", "app.jar"]

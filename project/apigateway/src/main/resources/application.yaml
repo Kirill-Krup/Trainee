@@ -1,0 +1,38 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: apigateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: userservice-route
+              uri: http://userservice:8081
+              predicates:
+                - Path=/api/v1/users/**
+            - id: authservice-route
+              uri: http://authservice:8082
+              predicates:
+                - Path=/api/v1/auth/login
+                - Path=/api/v1/auth/refresh
+                - Path=/api/v1/auth/validate
+            - id: orderservice-route
+              uri: http://orderservice:8083
+              predicates:
+                - Path=/api/v1/orders/**
+jwt:
+  secret: ${JWT_SECRET}
+
+services:
+  user:
+    url: http://userservice:8081
+    endpoints:
+      create: /api/v1/users/create
+      delete: /api/v1/users/{userId}
+  auth:
+    url: http://authservice:8082
+    endpoints:
+      register: /api/v1/auth/register
