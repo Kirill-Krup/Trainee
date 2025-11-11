@@ -9,11 +9,11 @@ import lombok.Getter;
 @AllArgsConstructor
 public class AuthRequest {
 
-  @NotBlank(message = "Логин не может быть пустым")
-  @Size(min = 3, max = 50, message = "Логин должен быть от 3 до 50 символов")
+  @NotBlank(message = "Login is required")
+  @Size(min = 3, max = 50, message = "Login should be over 3 and smaller than 50 symbols")
   private String login;
 
-  @NotBlank(message = "Пароль не может быть пустым")
-  @Size(min = 8, message = "Пароль должен содержать минимум 8 символов")
+  @NotBlank(message = "Password is required")
+  @Size(min = 8, message = "Password should be over 8 symbols")
   private String password;
 }
