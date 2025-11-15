@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+  http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd
+  http://www.liquibase.org/xml/ns/dbchangelog-ext
+  http://www.liquibase.org/xml/ns/dbchangelog-ext/dbchangelog-ext.xsd">
+
+  <changeSet id="1-create-payments-collection" author="Kirill">
+    <ext:createCollection collectionName="payments"/>
+  </changeSet>
+
+  <changeSet id="2-create-indexes" author="Kirill">
+    <ext:createIndex collectionName="payments">
+      <ext:keys>
+        <![CDATA[{
+          "order_id": 1,
+          "user_id": 1
+        }]]>
+      </ext:keys>
+      <ext:options>
+        <![CDATA[{
+          "name": "idx_order_user"
+        }]]>
+      </ext:options>
+    </ext:createIndex>
+  </changeSet>
+
+  <changeSet id="3-create-status-index" author="Kirill">
+    <ext:createIndex collectionName="payments">
+      <ext:keys>
+        <![CDATA[{
+          "status": 1
+        }]]>
+      </ext:keys>
+      <ext:options>
+        <![CDATA[{
+          "name": "idx_status"
+        }]]>
+      </ext:options>
+    </ext:createIndex>
+  </changeSet>
+
+  <changeSet id="4-create-timestamp-index" author="Kirill">
+    <ext:createIndex collectionName="payments">
+      <ext:keys>
+        <![CDATA[{
+          "timestamp": 1
+        }]]>
+      </ext:keys>
+      <ext:options>
+        <![CDATA[{
+          "name": "idx_timestamp"
+        }]]>
+      </ext:options>
+    </ext:createIndex>
+  </changeSet>
+</databaseChangeLog>

@@ -1,4 +1,4 @@
-name: CI for OrderService with Sonar & Docker
+name: CI for PaymentService with Sonar & Docker
 
 on:
   push:
@@ -7,21 +7,21 @@ on:
 
 jobs:
   build:
-    name: Build OrderService
+    name: Build PaymentService
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
 
       - name: Cache Maven packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
@@ -29,7 +29,7 @@ jobs:
 
       - name: Build project
         run: |
-          cd project/orderservice
+          cd project/paymentservice
           mvn -B clean package -DskipTests=true
 
   test:
@@ -39,17 +39,17 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
 
       - name: Run tests
         run: |
-          cd project/orderservice
+          cd project/paymentservice
           mvn -B test
 
   sonar:
@@ -59,19 +59,19 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
 
       - name: SonarCloud Scan
         run: |
-          cd project/orderservice
+          cd project/paymentservice
           mvn -B verify sonar:sonar \
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
             -Dsonar.organization=${{ secrets.SONAR_ORG }} \
@@ -84,32 +84,32 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
 
       - name: Build JAR file
         run: |
-          cd project/orderservice
+          cd project/paymentservice
           mvn -B clean package -DskipTests=true
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build Docker image
         run: |
-          cd project/orderservice
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/orderservice:${{ github.sha }} .
+          cd project/paymentservice
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/paymentservice:${{ github.sha }} .
 
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/orderservice:${{ github.sha }}
-          docker tag ${{ secrets.DOCKER_USERNAME }}/orderservice:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/orderservice:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/orderservice:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/paymentservice:${{ github.sha }}
+          docker tag ${{ secrets.DOCKER_USERNAME }}/paymentservice:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/paymentservice:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/paymentservice:latest
