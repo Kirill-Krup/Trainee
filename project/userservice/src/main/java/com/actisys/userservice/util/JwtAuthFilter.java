@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,7 +17,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
   private final JwtUtil jwtUtil;
-  private final UserDetailsService userDetailsService;
+
+  @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) {
+    String path = request.getRequestURI();
+    return path.startsWith("/api/v1/users/get-id-by-email") ||
+        path.startsWith("/api/v1/users/create") ||
+        path.startsWith("/actuator/health");
+  }
 
 
   @Override
@@ -25,10 +33,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     String header = request.getHeader("Authorization");
     if(header!=null && header.startsWith("Bearer ")) {
       String token = header.substring(7);
-      if(jwtUtil.validateToken(token)) {
+      if (jwtUtil.validateToken(token)) {
         String login = jwtUtil.extractLogin(token);
-        var userDetails = userDetailsService.loadUserByUsername(login);
-        var auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        var auth = new UsernamePasswordAuthenticationToken(login, null, List.of());
         SecurityContextHolder.getContext().setAuthentication(auth);
       }
     }

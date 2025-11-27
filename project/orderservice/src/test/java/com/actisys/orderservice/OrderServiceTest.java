@@ -3,12 +3,15 @@ package com.actisys.orderservice;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.actisys.orderservice.dto.OrderDTO;
+import com.actisys.orderservice.dto.event.CreateOrderEvent;
 import com.actisys.orderservice.exception.OrderNotFoundException;
 import com.actisys.orderservice.fallback.UserServiceClient;
 import com.actisys.orderservice.mapper.OrderMapper;
@@ -17,14 +20,18 @@ import com.actisys.orderservice.model.enumClasses.StatusType;
 import com.actisys.orderservice.repository.OrderRepository;
 import com.actisys.orderservice.service.impl.OrderServiceImpl;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceTest {
@@ -38,6 +45,9 @@ class OrderServiceTest {
   @Mock
   private UserServiceClient userServiceClient;
 
+  @Mock
+  private KafkaTemplate<String, Object> kafkaTemplate;
+
   @InjectMocks
   private OrderServiceImpl orderService;
 
@@ -46,15 +56,17 @@ class OrderServiceTest {
   void createOrder() {
     String email = "user@example.com";
     Long userId = 1L;
-    OrderDTO inputDTO = new OrderDTO(null, null, StatusType.PENDING, LocalDateTime.now(), null);
-    Order orderEntity = createOrderEntity(null, StatusType.PENDING);
+    OrderDTO inputDTO = new OrderDTO(null, null, StatusType.PENDING, LocalDateTime.now(),
+        Collections.emptyList());
     Order savedOrder = createOrderEntity(1L, StatusType.PENDING);
-    OrderDTO expectedDTO = new OrderDTO(1L, userId, StatusType.PENDING, LocalDateTime.now(), null);
+    OrderDTO expectedDTO = new OrderDTO(1L, userId, StatusType.PENDING, LocalDateTime.now(),
+        Collections.emptyList());
 
-    when(userServiceClient.getUserIdByEmail(email)).thenReturn(1L);
-    when(mapper.toEntity(any(OrderDTO.class))).thenReturn(orderEntity);
-    when(repository.save(orderEntity)).thenReturn(savedOrder);
-    when(mapper.toDTO(savedOrder)).thenReturn(expectedDTO);
+    when(userServiceClient.getUserIdByEmail(email)).thenReturn(userId);
+    when(repository.save(any(Order.class))).thenReturn(savedOrder);
+    when(mapper.toDTO(any(Order.class))).thenReturn(expectedDTO);
+    CompletableFuture<SendResult<String, Object>> future = CompletableFuture.completedFuture(null);
+    when(kafkaTemplate.send(anyString(), any())).thenReturn(future);
 
     OrderDTO result = orderService.createOrder(inputDTO, email);
 
@@ -63,10 +75,11 @@ class OrderServiceTest {
     assertThat(result.getStatus()).isEqualTo(StatusType.PENDING);
 
     verify(userServiceClient).getUserIdByEmail(email);
-    verify(mapper).toEntity(any(OrderDTO.class));
-    verify(repository).save(orderEntity);
-    verify(mapper).toDTO(savedOrder);
+    verify(repository).save(any(Order.class));
+    verify(mapper).toDTO(any(Order.class));
+    verify(kafkaTemplate).send(eq("CREATE_ORDER"), any(CreateOrderEvent.class));
   }
+
 
   @Test
   @DisplayName("This test should throw exception when user not found by email")
@@ -235,6 +248,8 @@ class OrderServiceTest {
     order.setUserId(1L);
     order.setStatus(status);
     order.setCreationDate(LocalDateTime.now());
+    order.setOrderItems(Collections.emptyList());
     return order;
   }
+
 }

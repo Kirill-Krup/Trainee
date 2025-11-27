@@ -2,6 +2,8 @@ package com.actisys.userservice.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
 import java.sql.Timestamp;
 import java.util.List;
 import lombok.AccessLevel;
@@ -22,7 +24,8 @@ public class UserDTO {
   @NotBlank(message = "Surname is required")
   private final String surname;
 
-  @NotBlank(message = "Birthday must be in the past")
+  @NotNull(message = "Birthday must be in the past")
+  @Past(message = "Birthday must be in the past")
   private final Timestamp birthDate;
 
   @Email(message = "Email should be valid")

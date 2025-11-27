@@ -12,17 +12,19 @@ spring:
             - id: userservice-route
               uri: http://userservice:8081
               predicates:
-                - Path=/api/v1/users/**
+                - Path=/api/v1/users/**,/api/v1/cards/**
             - id: authservice-route
               uri: http://authservice:8082
               predicates:
-                - Path=/api/v1/auth/login
-                - Path=/api/v1/auth/refresh
-                - Path=/api/v1/auth/validate
+                - Path=/api/v1/auth/**
             - id: orderservice-route
               uri: http://orderservice:8083
               predicates:
                 - Path=/api/v1/orders/**
+            - id: paymentservice-route
+              uri: http://paymentservice:8084
+              predicates:
+                - Path=/api/v1/payments/**
 jwt:
   secret: ${JWT_SECRET}
 
@@ -36,3 +38,10 @@ services:
     url: http://authservice:8082
     endpoints:
       register: /api/v1/auth/register
+
+logging:
+  level:
+    root: INFO
+    com.apigateway: DEBUG
+    org.springframework.web.server: DEBUG
+    org.springframework.web.reactive: DEBUG

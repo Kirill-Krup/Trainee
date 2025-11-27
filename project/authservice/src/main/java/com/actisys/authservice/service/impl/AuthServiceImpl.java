@@ -30,8 +30,6 @@ public class AuthServiceImpl implements AuthService {
     UserCredentials userCredentials = new UserCredentials();
     userCredentials.setLogin(authRequest.getLogin());
     userCredentials.setHashedPassword(passwordEncoder.encode(authRequest.getPassword()));
-    userCredentialsRepository.save(userCredentials);
-
     String accessToken = jwtUtil.generateAccessToken(authRequest.getLogin());
     String refreshToken = jwtUtil.generateRefreshToken(authRequest.getLogin());
     userCredentials.setRefreshToken(refreshToken);
@@ -42,7 +40,8 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public JwtResponse login(AuthRequest authRequest) {
-    Optional<UserCredentials> userCredentials = userCredentialsRepository.findById(authRequest.getLogin());
+    Optional<UserCredentials> userCredentials =
+        userCredentialsRepository.findByLogin(authRequest.getLogin());
     if (userCredentials.isEmpty() || !passwordEncoder.matches(authRequest.getPassword(),
         userCredentials.get().getHashedPassword())) {
       throw new BadCredentialsException("Invalid login or password");
@@ -65,7 +64,8 @@ public class AuthServiceImpl implements AuthService {
 
     String login = jwtUtil.extractLogin(refreshToken);
 
-    UserCredentials userCredentials = userCredentialsRepository.findById(login).orElseThrow(()->new BadCredentialsException("User not found"));
+    UserCredentials userCredentials = userCredentialsRepository.findById(login).orElseThrow(()->
+        new BadCredentialsException("User not found"));
 
     String newAccessToken = jwtUtil.generateAccessToken(login);
     String newRefreshToken = jwtUtil.generateRefreshToken(login);

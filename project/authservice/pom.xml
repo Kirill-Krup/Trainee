@@ -20,10 +20,10 @@
   <properties>
     <java.version>21</java.version>
     <jjwt.version>0.11.5</jjwt.version>
-    <liquibase.version>4.29.2</liquibase.version>
     <spring.security.version>6.3.4</spring.security.version>
     <lombok.version>1.18.34</lombok.version>
     <env-version>2.5.4</env-version>
+    <openapi-version>2.3.0</openapi-version>
   </properties>
 
   <dependencies>
@@ -49,7 +49,6 @@
     <dependency>
       <groupId>org.liquibase</groupId>
       <artifactId>liquibase-core</artifactId>
-      <version>${liquibase.version}</version>
     </dependency>
     <dependency>
       <groupId>org.postgresql</groupId>
@@ -96,6 +95,11 @@
     <dependency>
       <groupId>jakarta.validation</groupId>
       <artifactId>jakarta.validation-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>${openapi-version}</version>
     </dependency>
   </dependencies>
 

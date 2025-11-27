@@ -3,16 +3,17 @@ package com.actisys.orderservice;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.actisys.orderservice.config.IntegrationTestContainers;
 import com.actisys.orderservice.dto.OrderDTO;
 import com.actisys.orderservice.exception.OrderNotFoundException;
 import com.actisys.orderservice.model.enumClasses.StatusType;
 import com.actisys.orderservice.repository.OrderRepository;
 import com.actisys.orderservice.service.OrderService;
-import com.actisys.orderservice.config.PostgresTestContainer;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,23 +26,16 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
-@SpringBootTest
-@Testcontainers
+@SpringBootTest(properties = {
+    "spring.kafka.listener.auto-startup=false"
+})
 @Transactional
 @Rollback
-public class OrderServiceIntegrationTest {
-
-  @Container
-  static final PostgresTestContainer postgres = PostgresTestContainer.getInstance();
+public class OrderServiceIntegrationTest extends IntegrationTestContainers {
 
   @DynamicPropertySource
   static void configurateProperties(DynamicPropertyRegistry registry) {
-    registry.add("spring.datasource.url", postgres::getJdbcUrl);
-    registry.add("spring.datasource.username", postgres::getUsername);
-    registry.add("spring.datasource.password", postgres::getPassword);
     registry.add("user.service.url", () -> "http://localhost:9561");
   }
 
@@ -89,7 +83,7 @@ public class OrderServiceIntegrationTest {
   @DisplayName("Should create order successfully")
   void createOrder() {
     OrderDTO created = orderService.createOrder(
-        new OrderDTO(null, null, StatusType.PENDING, LocalDateTime.now(), null),
+        new OrderDTO(null, null, StatusType.PENDING, LocalDateTime.now(), Collections.emptyList()),
         testEmail
     );
 
@@ -105,7 +99,7 @@ public class OrderServiceIntegrationTest {
   @DisplayName("Should find order by id")
   void shouldFindOrderById() {
     OrderDTO created = orderService.createOrder(
-        new OrderDTO(null, null, StatusType.CONFIRMED, LocalDateTime.now(), null),
+        new OrderDTO(null, null, StatusType.CONFIRMED, LocalDateTime.now(), Collections.emptyList()),
         testEmail
     );
 
@@ -128,9 +122,9 @@ public class OrderServiceIntegrationTest {
   @Test
   @DisplayName("Should find all orders by statuses")
   void findOrdersByStatuses() {
-    orderService.createOrder(new OrderDTO(null, null, StatusType.SHIPPED, LocalDateTime.now(), null), testEmail);
-    orderService.createOrder(new OrderDTO(null, null, StatusType.DELIVERED, LocalDateTime.now(), null), testEmail);
-    orderService.createOrder(new OrderDTO(null, null, StatusType.CANCELLED, LocalDateTime.now(), null), testEmail);
+    orderService.createOrder(new OrderDTO(null, null, StatusType.SHIPPED, LocalDateTime.now(), Collections.emptyList()), testEmail);
+    orderService.createOrder(new OrderDTO(null, null, StatusType.DELIVERED, LocalDateTime.now(), Collections.emptyList()), testEmail);
+    orderService.createOrder(new OrderDTO(null, null, StatusType.CANCELLED, LocalDateTime.now(), Collections.emptyList()), testEmail);
 
     List<OrderDTO> found = orderService.getOrdersByStatusIn(List.of(StatusType.SHIPPED, StatusType.DELIVERED));
 
@@ -144,11 +138,11 @@ public class OrderServiceIntegrationTest {
   @DisplayName("Should find orders by ids")
   void findOrdersByIds() {
     OrderDTO order1 = orderService.createOrder(
-        new OrderDTO(null, null, StatusType.PENDING, LocalDateTime.now(), null),
+        new OrderDTO(null, null, StatusType.PENDING, LocalDateTime.now(), Collections.emptyList()),
         testEmail
     );
     OrderDTO order2 = orderService.createOrder(
-        new OrderDTO(null, null, StatusType.CONFIRMED, LocalDateTime.now(), null),
+        new OrderDTO(null, null, StatusType.CONFIRMED, LocalDateTime.now(), Collections.emptyList()),
         testEmail
     );
 
@@ -156,5 +150,94 @@ public class OrderServiceIntegrationTest {
 
     assertThat(found).hasSize(2);
     assertThat(found).extracting(OrderDTO::getId).containsExactlyInAnyOrder(order1.getId(), order2.getId());
+  }
+
+  @Test
+  @DisplayName("Should update order successfully")
+  void shouldUpdateOrder() {
+    OrderDTO created = orderService.createOrder(
+        new OrderDTO(null, null, StatusType.PENDING, LocalDateTime.now(), Collections.emptyList()),
+        testEmail
+    );
+
+    OrderDTO updateDTO = new OrderDTO(null, testUserId, StatusType.SHIPPED, LocalDateTime.now(), Collections.emptyList());
+    OrderDTO updated = orderService.updateOrder(created.getId(), updateDTO);
+
+    assertThat(updated.getId()).isEqualTo(created.getId());
+    assertThat(updated.getStatus()).isEqualTo(StatusType.SHIPPED);
+    assertThat(updated.getUserId()).isEqualTo(testUserId);
+  }
+
+  @Test
+  @DisplayName("Should throw exception when updating non-existent order")
+  void shouldThrowExceptionWhenUpdatingNonExistentOrder() {
+    OrderDTO updateDTO = new OrderDTO(null, testUserId, StatusType.SHIPPED, LocalDateTime.now(), Collections.emptyList());
+
+    org.junit.jupiter.api.Assertions.assertThrows(
+        OrderNotFoundException.class,
+        () -> orderService.updateOrder(999L, updateDTO)
+    );
+  }
+
+  @Test
+  @DisplayName("Should delete order successfully")
+  void shouldDeleteOrder() {
+    OrderDTO created = orderService.createOrder(
+        new OrderDTO(null, null, StatusType.PENDING, LocalDateTime.now(), Collections.emptyList()),
+        testEmail
+    );
+
+    orderService.deleteOrder(created.getId());
+
+    assertThat(orderRepository.findById(created.getId())).isEmpty();
+  }
+
+  @Test
+  @DisplayName("Should throw exception when deleting non-existent order")
+  void shouldThrowExceptionWhenDeletingNonExistentOrder() {
+    org.junit.jupiter.api.Assertions.assertThrows(
+        OrderNotFoundException.class,
+        () -> orderService.deleteOrder(999L)
+    );
+  }
+
+  @Test
+  @DisplayName("Should handle user service failure gracefully")
+  void shouldHandleUserServiceFailure() {
+    wireMockServer.stubFor(get(urlMatching("/api/v1/users/get-id-by-email/.*"))
+        .willReturn(aResponse()
+            .withStatus(404)));
+
+    org.junit.jupiter.api.Assertions.assertThrows(
+        RuntimeException.class,
+        () -> orderService.createOrder(
+            new OrderDTO(null, null, StatusType.PENDING, LocalDateTime.now(), Collections.emptyList()),
+            "nonexistent@example.com"
+        )
+    );
+  }
+
+  @Test
+  @DisplayName("Should persist multiple orders and maintain data consistency")
+  void shouldPersistMultipleOrdersAndMaintainConsistency() {
+    OrderDTO order1 = orderService.createOrder(
+        new OrderDTO(null, null, StatusType.PENDING, LocalDateTime.now(), Collections.emptyList()),
+        testEmail
+    );
+    OrderDTO order2 = orderService.createOrder(
+        new OrderDTO(null, null, StatusType.CONFIRMED, LocalDateTime.now(), Collections.emptyList()),
+        testEmail
+    );
+    OrderDTO order3 = orderService.createOrder(
+        new OrderDTO(null, null, StatusType.SHIPPED, LocalDateTime.now(), Collections.emptyList()),
+        testEmail
+    );
+
+    List<OrderDTO> allOrders = orderService.getOrdersByIdIn(
+        List.of(order1.getId(), order2.getId(), order3.getId())
+    );
+
+    assertThat(allOrders).hasSize(3);
+    assertThat(allOrders).extracting(OrderDTO::getUserId).containsOnly(testUserId);
   }
 }

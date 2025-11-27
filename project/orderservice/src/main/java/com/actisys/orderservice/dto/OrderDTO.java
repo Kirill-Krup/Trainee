@@ -7,15 +7,16 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
 @AllArgsConstructor
+@ToString
 public class OrderDTO {
 
   private final Long id;
 
-  @NotNull(message = "Can't create order without user")
   private Long userId;
 
   @NotNull(message = "Status is required")
