@@ -7,6 +7,7 @@ import com.actisys.userservice.exception.CardInfoNotFoundException;
 import com.actisys.userservice.mapper.CardInfoMapper;
 import com.actisys.userservice.model.CardInfo;
 import com.actisys.userservice.repository.CardInfoRepository;
+import com.actisys.userservice.repository.UserRepository;
 import com.actisys.userservice.service.CardInfoService;
 import java.util.List;
 import java.util.Optional;
@@ -18,15 +19,19 @@ import org.springframework.transaction.annotation.Transactional;
 public class CardInfoServiceImpl implements CardInfoService {
   private final CardInfoRepository cardInfoRepository;
   private final CardInfoMapper cardInfoMapper;
+  private final UserRepository userRepository;
 
-  public CardInfoServiceImpl(CardInfoRepository cardInfoRepository, CardInfoMapper cardInfoMapper) {
+  public CardInfoServiceImpl(CardInfoRepository cardInfoRepository, CardInfoMapper cardInfoMapper,
+      UserRepository userRepository) {
     this.cardInfoRepository = cardInfoRepository;
     this.cardInfoMapper = cardInfoMapper;
+    this.userRepository = userRepository;
   }
 
   @Override
   public CardInfoDTO createCard(CreateCardInfoDTO createCardInfoDTO) {
     CardInfo entity = cardInfoMapper.toEntityForCreate(createCardInfoDTO);
+    entity.setUser(userRepository.findUserById(createCardInfoDTO.getUserId()));
     CardInfo savedCard = cardInfoRepository.save(entity);
     return cardInfoMapper.toDTO(savedCard);
   }

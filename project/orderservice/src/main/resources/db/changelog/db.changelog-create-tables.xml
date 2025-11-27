@@ -100,4 +100,24 @@
     </createIndex>
 
   </changeSet>
+
+
+  <changeSet id="4" author="Kirill">
+    <comment>Insert test data into items table</comment>
+
+    <insert tableName="items">
+      <column name="name" value="Coca cola"/>
+      <column name="price" value="1.99"/>
+    </insert>
+
+    <insert tableName="items">
+      <column name="name" value="Fanta"/>
+      <column name="price" value="1.79"/>
+    </insert>
+
+    <insert tableName="items">
+      <column name="name" value="Sprite"/>
+      <column name="price" value="1.86"/>
+    </insert>
+  </changeSet>
 </databaseChangeLog>

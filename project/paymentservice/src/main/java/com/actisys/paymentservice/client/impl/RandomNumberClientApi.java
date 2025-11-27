@@ -1,12 +1,15 @@
 package com.actisys.paymentservice.client.impl;
 
 import com.actisys.paymentservice.client.RandomNumberClient;
+import com.actisys.paymentservice.exception.RandomApiException;
 import java.util.Random;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class RandomNumberClientApi implements RandomNumberClient {
 
@@ -26,7 +29,8 @@ public class RandomNumberClientApi implements RandomNumberClient {
         return Integer.parseInt(number);
       }
     } catch(Exception e) {
-      e.printStackTrace();
+      log.error("Error occurred in randomApi{}", e.getMessage(), e);
+      throw new RandomApiException();
     }
     return new Random().nextInt(100) + 1;
   }

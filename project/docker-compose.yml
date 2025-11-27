@@ -60,12 +60,16 @@ services:
   mongodb:
     image: mongo:6.0
     container_name: mongodb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
     networks:
       - app-network
+
 
   kafka:
     image: apache/kafka:latest
@@ -137,6 +141,7 @@ services:
     ports:
       - "8083:8083"
     environment:
+      - USER_SERVICE_URL=http://userservice:8081
       - SPRING_DATASOURCE_URL=jdbc:postgresql://orderdb:5432/order_service_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=12345
@@ -158,10 +163,18 @@ services:
     environment:
       - SERVER_PORT=8080
       - JWT_SECRET=${JWT_SECRET}
+      - LOGGING_LEVEL_ROOT=INFO
+      - LOGGING_LEVEL_COM_APIGATEWAY=DEBUG
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB=DEBUG
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_SERVER_ADAPTER=TRACE
+      - LOGGING_LEVEL_REACTOR_NETTY=DEBUG
+      - SERVICES_USER_URL=http://userservice:8081
+      - SERVICES_AUTH_URL=http://authservice:8082
     depends_on:
       - userservice
       - authservice
       - orderservice
+      - paymentservice
     restart: unless-stopped
     networks:
       - app-network
@@ -174,7 +187,7 @@ services:
     ports:
       - "8084:8084"
     environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/payment_service_db
+      - SPRING_DATA_MONGODB_URI=mongodb://admin:password@mongodb:27017/payment_service_db?authSource=admin
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - SERVER_PORT=8084
     depends_on:

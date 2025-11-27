@@ -3,6 +3,7 @@ package com.actisys.paymentservice.service.impl;
 import com.actisys.paymentservice.client.RandomNumberClient;
 import com.actisys.paymentservice.dto.PaymentCreateDTO;
 import com.actisys.paymentservice.dto.PaymentDTO;
+import com.actisys.paymentservice.exception.NumberValidationException;
 import com.actisys.paymentservice.exception.PaymentNotFoundException;
 import com.actisys.paymentservice.mapper.PaymentMapper;
 import com.actisys.paymentservice.model.Payment;
@@ -26,7 +27,7 @@ public class PaymentServiceImpl implements PaymentService {
 
   @Override
   public PaymentDTO createPayment(PaymentCreateDTO paymentDTO) {
-    int randomNumber = randomNumberClient.getRandomNumber();
+    int randomNumber = getRandomNumber();
     log.debug("Api sent randomNumber: {}", randomNumber);
     PaymentStatus status = (randomNumber%2 == 0) ? PaymentStatus.SUCCESS : PaymentStatus.FAILED;
     Payment payment = paymentMapper.toEntity(paymentDTO);
@@ -77,6 +78,14 @@ public class PaymentServiceImpl implements PaymentService {
   @Override
   public Double getTotalSumForPeriod(Instant from, Instant to) {
     return paymentRepository.getTotalSumForPeriod(from, to);
+  }
+
+  private int getRandomNumber(){
+    int randomNumber = randomNumberClient.getRandomNumber();
+    if(randomNumber < 0){
+      throw new NumberValidationException();
+    }
+    return randomNumber;
   }
 
 }

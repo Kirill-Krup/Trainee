@@ -26,6 +26,7 @@
     <wire-mock.version>3.9.1</wire-mock.version>
     <liquibase-version>4.29.2</liquibase-version>
     <awaitility.version>4.1.1</awaitility.version>
+    <openapi-version>2.3.0</openapi-version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -144,6 +145,11 @@
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-contract-wiremock</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>${openapi-version}</version>
     </dependency>
   </dependencies>
 

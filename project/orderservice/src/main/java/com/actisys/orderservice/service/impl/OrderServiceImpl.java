@@ -1,17 +1,21 @@
 package com.actisys.orderservice.service.impl;
 
 import com.actisys.orderservice.dto.OrderDTO;
+import com.actisys.orderservice.dto.OrderItemDto;
 import com.actisys.orderservice.dto.event.CreateOrderEvent;
 import com.actisys.orderservice.exception.OrderNotFoundException;
 import com.actisys.orderservice.exception.UserNotFoundException;
 import com.actisys.orderservice.fallback.UserServiceClient;
 import com.actisys.orderservice.mapper.OrderMapper;
+import com.actisys.orderservice.model.Item;
 import com.actisys.orderservice.model.Order;
 import com.actisys.orderservice.model.OrderItem;
 import com.actisys.orderservice.model.enumClasses.StatusType;
 import com.actisys.orderservice.repository.OrderRepository;
 import com.actisys.orderservice.service.OrderService;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -32,14 +36,33 @@ public class OrderServiceImpl implements OrderService {
   private final KafkaTemplate<String, Object> kafkaTemplate;
 
   @Override
-  public OrderDTO createOrder(OrderDTO order, String email) {
+  public OrderDTO createOrder(OrderDTO orderDTO, String email) {
     Long userId = userServiceClient.getUserIdByEmail(email);
     if(userId == null) {
       throw new UserNotFoundException(email);
     }
+    log.info("Creating order for user: {}", userId);
+    Order order = new Order();
     order.setUserId(userId);
-    Order orderForSave = mapper.toEntity(order);
-    Order savedEntity = orderRepository.save(orderForSave);
+    order.setStatus(orderDTO.getStatus());
+    order.setCreationDate(orderDTO.getCreationDate() != null
+        ? orderDTO.getCreationDate()
+        : LocalDateTime.now());
+    List<OrderItem> orderItems = new ArrayList<>();
+    for (OrderItemDto itemDto : orderDTO.getOrderItems()) {
+      OrderItem orderItem = new OrderItem();
+      orderItem.setQuantity(itemDto.getQuantity());
+      Item item = new Item();
+      item.setId(itemDto.getItem().getId());
+      item.setName(itemDto.getItem().getName());
+      item.setPrice(itemDto.getItem().getPrice());
+      orderItem.setItem(item);
+      orderItem.setOrder(order);
+
+      orderItems.add(orderItem);
+    }
+    order.setOrderItems(orderItems);
+    Order savedEntity = orderRepository.save(order);
     CreateOrderEvent event = new CreateOrderEvent(
         savedEntity.getId(),
         userId,
@@ -51,24 +74,32 @@ public class OrderServiceImpl implements OrderService {
 
   @Override
   public Optional<OrderDTO> getOrderById(Long orderId) {
-    Order order = orderRepository.findById(orderId).orElseThrow(()-> new OrderNotFoundException(orderId) );
+    Order order = orderRepository.findById(orderId).orElseThrow(()->
+        new OrderNotFoundException(orderId) );
     return Optional.ofNullable(mapper.toDTO(order));
   }
 
   @Override
   public List<OrderDTO> getOrdersByIdIn(List<Long> orderIds) {
-    return orderRepository.findByIdIn(orderIds).stream().map(mapper::toDTO).collect(Collectors.toList());
+    return orderRepository.findByIdIn(orderIds)
+        .stream()
+        .map(mapper::toDTO)
+        .collect(Collectors.toList());
   }
 
   @Override
   public List<OrderDTO> getOrdersByStatusIn(List<StatusType> statuses) {
-    return orderRepository.findByStatusIn(statuses).stream().map(mapper::toDTO).collect(Collectors.toList());
+    return orderRepository.findByStatusIn(statuses)
+        .stream()
+        .map(mapper::toDTO)
+        .collect(Collectors.toList());
   }
 
   @Override
   @Transactional
   public OrderDTO updateOrder(Long id, OrderDTO order) {
-    Order existingOrder = orderRepository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
+    Order existingOrder = orderRepository.findById(id).orElseThrow(() ->
+        new OrderNotFoundException(id));
     existingOrder.setStatus(order.getStatus());
     Order savedEntity = orderRepository.save(existingOrder);
     return mapper.toDTO(savedEntity);
@@ -85,7 +116,8 @@ public class OrderServiceImpl implements OrderService {
 
   @Override
   public void updateOrderStatus(Long orderId, StatusType status) {
-    Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
+    Order order = orderRepository.findById(orderId).orElseThrow(() ->
+        new OrderNotFoundException(orderId));
     order.setStatus(status);
     orderRepository.save(order);
   }

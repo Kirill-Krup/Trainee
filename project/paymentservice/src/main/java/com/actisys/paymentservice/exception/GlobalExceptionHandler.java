@@ -14,5 +14,17 @@ public class GlobalExceptionHandler {
     ErrorResponse error = new ErrorResponse("PAYMENT_NOT_FOUND", e.getMessage());
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
   }
+
+  @ExceptionHandler(RandomApiException.class)
+  public ResponseEntity<ErrorResponse> handleRandomApiException(RandomApiException e) {
+    ErrorResponse error = new ErrorResponse("RANDOM_API_EXCEPTION", e.getMessage());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+  }
+
+  @ExceptionHandler(NumberValidationException.class)
+  public ResponseEntity<ErrorResponse> handleNumberValidationException(NumberValidationException e) {
+    ErrorResponse error = new ErrorResponse("NUMBER_VALIDATION_EXCEPTION", e.getMessage());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+  }
 }
 

@@ -58,15 +58,13 @@ class OrderServiceTest {
     Long userId = 1L;
     OrderDTO inputDTO = new OrderDTO(null, null, StatusType.PENDING, LocalDateTime.now(),
         Collections.emptyList());
-    Order orderEntity = createOrderEntity(null, StatusType.PENDING);
     Order savedOrder = createOrderEntity(1L, StatusType.PENDING);
     OrderDTO expectedDTO = new OrderDTO(1L, userId, StatusType.PENDING, LocalDateTime.now(),
         Collections.emptyList());
 
-    when(userServiceClient.getUserIdByEmail(email)).thenReturn(1L);
-    when(mapper.toEntity(any(OrderDTO.class))).thenReturn(orderEntity);
-    when(repository.save(orderEntity)).thenReturn(savedOrder);
-    when(mapper.toDTO(savedOrder)).thenReturn(expectedDTO);
+    when(userServiceClient.getUserIdByEmail(email)).thenReturn(userId);
+    when(repository.save(any(Order.class))).thenReturn(savedOrder);
+    when(mapper.toDTO(any(Order.class))).thenReturn(expectedDTO);
     CompletableFuture<SendResult<String, Object>> future = CompletableFuture.completedFuture(null);
     when(kafkaTemplate.send(anyString(), any())).thenReturn(future);
 
@@ -77,11 +75,11 @@ class OrderServiceTest {
     assertThat(result.getStatus()).isEqualTo(StatusType.PENDING);
 
     verify(userServiceClient).getUserIdByEmail(email);
-    verify(mapper).toEntity(any(OrderDTO.class));
-    verify(repository).save(orderEntity);
-    verify(mapper).toDTO(savedOrder);
+    verify(repository).save(any(Order.class));
+    verify(mapper).toDTO(any(Order.class));
     verify(kafkaTemplate).send(eq("CREATE_ORDER"), any(CreateOrderEvent.class));
   }
+
 
   @Test
   @DisplayName("This test should throw exception when user not found by email")
