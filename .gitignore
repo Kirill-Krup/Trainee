@@ -24,7 +24,6 @@ logs/
 Thumbs.db
 
 # Application
-application.properties
 application.yml
 /config/
 .env

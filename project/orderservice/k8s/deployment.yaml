@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orderservice
+  namespace: app-namespace
+  labels:
+    app: orderservice
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: orderservice
+  template:
+    metadata:
+      labels:
+        app: orderservice
+        version: v1
+    spec:
+      containers:
+        - name: orderservice
+          image: orderservice:latest
+          imagePullPolicy: Never
+
+          ports:
+            - containerPort: 8083
+              protocol: TCP
+
+          env:
+            - name: SPRING_LIQUIBASE_CHANGE_LOG
+              value: "classpath:db/changelog/db.changelog-master.xml"
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://orderdb:5432/order_service_db"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "postgres"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "12345"
+            - name: SERVER_PORT
+              value: "8083"
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8083
+            initialDelaySeconds: 180
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8083
+            initialDelaySeconds: 180
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+      restartPolicy: Always
+
+

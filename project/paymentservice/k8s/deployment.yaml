@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paymentservice
+  namespace: app-namespace
+  labels:
+    app: paymentservice
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: paymentservice
+  template:
+    metadata:
+      labels:
+        app: paymentservice
+        version: v1
+    spec:
+      containers:
+        - name: paymentservice
+          image: paymentservice:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8084
+              protocol: TCP
+          env:
+            - name: SPRING_APPLICATION_NAME
+              value: "paymentservice"
+            - name: SPRING_LIQUIBASE_ENABLED
+              value: "true"
+            - name: SPRING_LIQUIBASE_CHANGE_LOG
+              value: "classpath:db/changelog/db.changelog-master.xml"
+            - name: SPRING_DATA_MONGODB_URI
+              value: "mongodb://admin:password@mongodb:27017/payment_service_db?authSource=admin"
+            - name: SPRING_DATA_MONGODB_AUTO_INDEX_CREATION
+              value: "true"
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:29092"
+            - name: RANDOM_API_URL
+              value: "https://www.randomnumberapi.com"
+            - name: SERVER_PORT
+              value: "8084"
+            - name: LOGGING_LEVEL_LIQUIBASE
+              value: "INFO"
+            - name: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_DATA_MONGODB_CORE
+              value: "DEBUG"
+            - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+              value: "health,info,metrics"
+            - name: MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS
+              value: "always"
+            - name: MANAGEMENT_HEALTH_PROBES_ENABLED
+              value: "true"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8084
+            initialDelaySeconds: 180
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8084
+            initialDelaySeconds: 180
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3

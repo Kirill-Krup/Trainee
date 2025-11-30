@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: userservice
+  namespace: app-namespace
+  labels:
+    app: userservice
+spec:
+  selector:
+    app: userservice
+  ports:
+    - port: 8081
+      targetPort: 8081
+      protocol: TCP
+  type: ClusterIP

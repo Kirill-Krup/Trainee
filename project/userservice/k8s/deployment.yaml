@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: userservice
+  namespace: app-namespace
+  labels:
+    app: userservice
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: userservice
+  template:
+    metadata:
+      labels:
+        app: userservice
+        version: v1
+    spec:
+      containers:
+        - name: userservice
+          image: userservice:latest
+          imagePullPolicy: Never
+
+          ports:
+            - containerPort: 8081
+              protocol: TCP
+
+          env:
+            - name: SPRING_LIQUIBASE_CHANGE_LOG
+              value: "classpath:db/changelog/db.changelog-master.xml"
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://userdb:5432/demo"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "postgres"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "12345"
+            - name: SPRING_DATA_REDIS_HOST
+              value: "redis"
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
+            - name: SERVER_PORT
+              value: "8081"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: jwt-secret
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8081
+            initialDelaySeconds: 180
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8081
+            initialDelaySeconds: 180
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+      restartPolicy: Always
+
+
