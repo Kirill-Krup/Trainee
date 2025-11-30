@@ -45,3 +45,14 @@ logging:
     com.apigateway: DEBUG
     org.springframework.web.server: DEBUG
     org.springframework.web.reactive: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true

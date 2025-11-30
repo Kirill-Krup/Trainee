@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+  namespace: app-namespace
+type: Opaque
+data:
+  jwt-secret: NGZIOWFWalh4THEzYk4ycEc3elFtVDB5V2NKOHVSMWRLNWVTNnZYaFBhOW9VYjduQ3dEek1mM3FZdExrWHJWag==

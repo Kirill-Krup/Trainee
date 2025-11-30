@@ -50,7 +50,10 @@
       <artifactId>spring-dotenv</artifactId>
       <version>${env-version}</version>
     </dependency>
-
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
     <!-- Database -->
     <dependency>
       <groupId>org.liquibase</groupId>
